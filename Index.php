@@ -46,23 +46,66 @@ switch ($server->getMethod()) {
             break;
         }
 
-        $server->returnResponse(201, [$potentialUser]);
+        $server->returnResponse(201, $potentialUser);
 
         break;
     case 'PUT':
+
         (int)$id = $body['id'] ?? null;
         $name = $body['name'] ?? null;
         $password = $body['password'] ?? null;
-        echo $user->modifyUser($id, $name, $password);
+
+        if (is_null($name) || is_null($password) || is_null($id)) {
+            $server->returnResponse(409, ['error' => 'Not Found Data']);
+            break;
+        }
+
+        $potentialUser = $user->modifyUser($id, $name, $password);
+
+        if (!$potentialUser) {
+            $server->returnResponse(409, ['error' => 'Id Not Found']);
+            break;
+        }
+
+        $server->returnResponse(200, $potentialUser);
         break;
     case 'PATCH':
+
         (int)$id = $body['id'] ?? null;
         $name = $body['name'] ?? null;
         $password = $body['password'] ?? null;
-        echo $user->partialModifyUser($id, $name, $password);
+
+        if (is_null($name) || is_null($password) || is_null($id)) {
+            $server->returnResponse(409, ['error' => 'Not Found Data']);
+            break;
+        }
+
+        $potentialUser = $user->partialModifyUser($id, $name, $password);
+
+        if (!$potentialUser) {
+            $server->returnResponse(409, ['error' => 'Id Not Found']);
+            break;
+        }
+
+        $server->returnResponse(200, $potentialUser);
         break;
     case 'DELETE':
+
         (int)$id = $body['id'] ?? null;
-        echo $user->deleteUser($id);
+
+        if (is_null($id)) {
+            $server->returnResponse(409, ['error' => 'Not Found Data']);
+            break;
+        }
+
+        $userDeleted = $user->deleteUser($id);
+
+        if (!$userDeleted) {
+            $server->returnResponse(409, ['error' => 'Id Not Found']);
+            break;
+        }
+
+        $server->returnResponse(200, $userDeleted);
+
         break;
 }

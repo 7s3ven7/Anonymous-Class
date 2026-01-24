@@ -38,20 +38,15 @@ class User
         return $this->db->select('SELECT * FROM users WHERE `name` = :name AND `password` = :password', [':name' => $name, ':password' => $password]);
     }
 
-    public function modifyUser(?int $id = null, ?string $name = null, ?string $password = null): string
+    public function modifyUser(?int $id = null, ?string $name = null, ?string $password = null): array|bool
     {
-
-        return match (null) {
-            $name || $password => json_encode(['error' => 'Not Found Data']),
-            $id => json_encode(['error' => 'Not Found Id']),
-            default => $this->db->query(
-                'UPDATE users SET `name` = :name, `password` = :password WHERE `id` = :id',
-                [':name' => $name, ':password' => $password, ':id' => $id]),
-        };
-
+        $this->db->query(
+            'UPDATE users SET `name` = :name, `password` = :password WHERE `id` = :id',
+            [':name' => $name, ':password' => $password, ':id' => $id]);
+        return $this->db->select('SELECT * FROM users WHERE `id` = :id', [':id' => $id]);
     }
 
-    public function partialModifyUser(?int $id = null, ?string $name = null, ?string $password = null): string
+    public function partialModifyUser(?int $id = null, ?string $name = null, ?string $password = null): array|false
     {
 
         $fields = ['id', 'name', 'password'];
@@ -67,25 +62,22 @@ class User
             $params[':' . $field] = $$field;
         }
 
-        return match (null) {
-            $name && $password => json_encode(['error' => 'Not Found Data']),
-            $id => json_encode(['error' => 'Not Found Id']),
-            default => $this->db->query(
-                'UPDATE users SET ' . implode(',', $queryFields) . ' WHERE `id` = :id',
-                $params),
-        };
+        $this->db->query('UPDATE users SET ' . implode(',', $queryFields) . ' WHERE `id` = :id',
+            $params);
 
+        return $this->db->select('SELECT * FROM users WHERE `id` = :id', [':id' => $id]);
     }
 
-    public function deleteUser(?int $id = null): int
+    public function deleteUser(?int $id = null): array|false
     {
-        if (!is_null($id) &&
-            $this->db->query('DELETE FROM users WHERE `id` = :id', [':id' => $id]) &&
-            !is_array($this->db->query('SELECT * FROM `users` WHERE `id` = :id', ['id' => $id]))) {
-            return 1;
-        };
 
-        return 0;
+        $user = $this->db->select('SELECT * FROM users WHERE `id` = :id', [':id' => $id]);
+
+        if ($this->db->query('DELETE FROM users WHERE `id` = :id', [':id' => $id])) {
+            return ['message' => 'User deleted successfully', 'user' => $user];
+        }
+
+        return false;
 
     }
 
