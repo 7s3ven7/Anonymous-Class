@@ -5,24 +5,35 @@ namespace Src;
 class Server
 {
 
-    private string $Method;
+    private string $method;
 
     public function __construct()
     {
-        $this->Method = $_SERVER['REQUEST_METHOD'];
-    }
-
-    public function returnResponse(int $status = 404, array $Json = ['error' => 'Not Found']): void
-    {
-        http_response_code($status);
-        Header('Content-type: application/json, charset=utf-8');
-
-        echo json_encode($Json);
+        $this->method = $_SERVER['REQUEST_METHOD'];
     }
 
     public function getMethod(): string
     {
-        return $this->Method;
+        return $this->method;
+    }
+
+    public function response(int $code, array|string|object $body): void
+    {
+
+        http_response_code($code);
+
+        Header("Content-type: application/json");
+
+        if (is_array($body)) {
+            $body = json_encode($body);
+        }
+        if (is_object($body)) {
+            print_r($body);
+            return;
+        }
+
+        echo $body;
+
     }
 
 }
